@@ -2,10 +2,12 @@
 
 **Find leads → research them → draft personalized outreach → send → follow up → track replies — then hand qualified leads straight to a full sales CRM.**
 
-A monorepo that pairs an AI-powered lead-generation engine with a full-featured Lead CRM, so a prospect can go from "cold name on Apollo" to "tracked deal in the pipeline" without leaving one system.
+A monorepo that pairs an AI-powered lead-generation engine with a full-featured Lead CRM, so a prospect can go from "cold name on Apollo" to "tracked deal in the pipeline" without leaving one system — the CRM even renders right inside the Lead-Gen app's own **Rapport** tab.
 
 <p align="center">
-  <img src="ui_reference/dashboard.png" alt="Outreach pipeline dashboard" width="800">
+  <img src="docs/screenshots/demo-walkthrough.gif" alt="Click-through demo: Lead-Gen dashboard → Leads → embedded Rapport CRM → Deals" width="850">
+  <br/>
+  <sub>Live walkthrough — recorded straight from the deployed demos, not a mockup.</sub>
 </p>
 
 <p align="center">
@@ -18,15 +20,30 @@ A monorepo that pairs an AI-powered lead-generation engine with a full-featured 
   <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=flat-square&logo=drizzle&logoColor=black">
   <img alt="Groq" src="https://img.shields.io/badge/LLM-Groq-F55036?style=flat-square">
   <img alt="Vercel" src="https://img.shields.io/badge/Deployed_on-Vercel-000000?style=flat-square&logo=vercel&logoColor=white">
+  <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square">
 </p>
 
 <p align="center">
-  <a href="https://lead-gen-demo-iota.vercel.app"><strong>🚀 Lead-Gen Live Demo</strong></a>
+  <a href="https://lead-gen-demo-iota.vercel.app"><strong>🚀 Open the Live Demo</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://rapport-crm-demo.vercel.app"><strong>📇 Rapport CRM Live Demo</strong></a>
+  <a href="https://rapport-crm-demo.vercel.app"><strong>📇 Rapport CRM (standalone)</strong></a>
 </p>
 
-> **Demo note:** the two links above are frontend preview deployments on Vercel (UI only — no backend wired up there yet). To use either app end-to-end with real data, run it locally following [Getting Started](#-getting-started) below.
+> **Demo note:** both links are fully click-through — no sign-up, no login. They run on a self-contained, client-side mock data layer (seeded leads/deals/contacts, nothing real is ever sent) rather than the real Apollo/Groq/Resend/Postgres backend, so you can explore the whole product in one click. Run it [locally](#-getting-started) for the real, API-backed version.
+
+<details>
+<summary><strong>📑 Table of contents</strong></summary>
+
+- [What's in here](#-whats-in-here)
+- [Architecture](#️-architecture)
+- [Features](#-features)
+- [Tech stack](#-tech-stack)
+- [Screenshots](#️-screenshots)
+- [Repo structure](#-repo-structure)
+- [Getting started](#-getting-started)
+- [Live deployments](#-live-deployments)
+
+</details>
 
 ---
 
@@ -37,7 +54,7 @@ This repo is two products that share one outreach pipeline:
 | | |
 |---|---|
 | **Lead-Gen Engine** (`server/` + `web/`) | Finds leads via Apollo, researches each one with Tavily + an LLM, drafts a personalized email, sends it via Resend, runs a 48h follow-up sequence, and tracks opens/clicks/replies. |
-| **Rapport CRM** (`crm/`) | A role-based (Admin / Manager / BD) sales CRM — pipeline stages, lead detail, follow-ups, dashboards, reports, audit trail — that qualified leads get handed off to. |
+| **Rapport CRM** (`crm/`) | A role-based (Admin / Manager / BD) sales CRM — pipeline stages, deals, contacts, accounts, reports, audit trail — that qualified leads get handed off to. Embedded directly inside the Lead-Gen app's **Rapport** tab, side by side with its own standalone deployment. |
 
 A lead found and warmed up by the Lead-Gen Engine can be pushed straight into Rapport CRM via the built-in `crmClient` bridge, so sales reps pick up the conversation with full research context already attached.
 
@@ -67,6 +84,7 @@ flowchart TB
     end
 
     LGWeb -- "/api/*" --> LGApi
+    LGWeb -- "embeds via iframe" --> CRMWeb
     LGApi --> Apollo
     LGApi --> Tavily
     LGApi --> Groq
@@ -97,6 +115,25 @@ flowchart LR
     G -. "qualified lead" .-> J["📇 Push to<br/>Rapport CRM"]
 ```
 
+### Request lifecycle — demo vs. real deployment
+
+```mermaid
+sequenceDiagram
+    participant U as Browser
+    participant W as web/ (Vite build)
+    participant M as mockClient.ts
+    participant S as server/ (Express)
+    U->>W: fetch("/api/leads")
+    alt VITE_DEMO_MODE=true (public demo)
+        W->>M: route to in-memory store
+        M-->>W: seeded JSON, ~150-350ms delay
+    else real deployment
+        W->>S: fetch("/api/leads")
+        S-->>W: live Apollo/Groq/Resend-backed data
+    end
+    W-->>U: render
+```
+
 ---
 
 ## ✨ Features
@@ -115,11 +152,25 @@ flowchart LR
 ### Rapport CRM
 - Role-based access: **Admin** (full access), **Manager** (all leads + reports), **BD** (own leads only)
 - Full lead lifecycle: pipeline stages, drag/assign, inline notes, activity timeline
+- Deals, Contacts, and Accounts with their own detail pages, notes, and revenue log
 - Follow-up tasks with due-status tracking
 - Dashboard: pipeline stats, stage breakdown, conversion funnel, recent activity
 - Reports: monthly growth, leads by industry/location/status, user performance
 - CSV import, bulk stage change / assign / delete
 - Full audit log of every change (admin only)
+
+### At a glance
+
+| | Lead-Gen Engine | Rapport CRM |
+|---|:---:|:---:|
+| AI-powered research & drafting | ✅ | — |
+| Automated send + follow-up | ✅ | — |
+| Pipeline / Kanban board | ✅ (leads) | ✅ (leads + deals) |
+| Role-based access control | — | ✅ |
+| Deals & revenue tracking | — | ✅ |
+| Reports & analytics | ✅ (email engagement) | ✅ (pipeline & team) |
+| Audit trail | — | ✅ |
+| Embeds the other app | ✅ (Rapport tab) | — |
 
 ---
 
@@ -138,7 +189,35 @@ flowchart LR
 
 ---
 
+## 🖼️ Screenshots
+
+Captured straight from the live deployments linked above — not mockups.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/lead-gen-dashboard.jpg" alt="Lead-Gen dashboard"></td>
+<td width="50%"><img src="docs/screenshots/lead-gen-leads.jpg" alt="Lead-Gen leads list"></td>
+</tr>
+<tr>
+<td align="center"><sub>Lead-Gen — pipeline dashboard</sub></td>
+<td align="center"><sub>Lead-Gen — leads table with research/draft/send status</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/rapport-crm-dashboard.jpg" alt="Rapport CRM dashboard"></td>
+<td width="50%"><img src="docs/screenshots/rapport-crm-deals.jpg" alt="Rapport CRM deals Kanban"></td>
+</tr>
+<tr>
+<td align="center"><sub>Rapport CRM — admin dashboard</sub></td>
+<td align="center"><sub>Rapport CRM — deals Kanban board</sub></td>
+</tr>
+</table>
+
+---
+
 ## 📂 Repo structure
+
+<details>
+<summary>Click to expand the full tree</summary>
 
 ```
 lead-generation-system/
@@ -150,27 +229,38 @@ lead-generation-system/
 │       ├── email/       # Resend adapter
 │       └── crm/         # crmClient — bridge into Rapport CRM
 ├── web/                 # Lead-Gen frontend (React + Vite)
+│   └── src/
+│       ├── api/         # client.ts (real) + mockClient.ts (demo mode)
+│       └── features/crm/CrmView.tsx   # embeds Rapport CRM via iframe
 ├── crm/                 # Rapport CRM — pnpm workspace
 │   ├── artifacts/
 │   │   ├── api-server/  # CRM Express API
 │   │   ├── lead-crm/    # CRM frontend (deployed as rapport-crm-demo)
+│   │   │   └── src/demo/installDemoFetch.ts   # client-side mock backend (demo mode)
 │   │   └── mockup-sandbox/
 │   └── lib/             # shared DB schema, API spec, generated clients
 ├── localdb-tool/         # local Postgres helper for CRM dev
 ├── import_database_template/  # sample import spreadsheets
-└── ui_reference/         # design reference screenshots
+└── docs/screenshots/     # real screenshots + demo GIF used in this README
 ```
+
+</details>
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+<details>
+<summary><strong>Prerequisites</strong></summary>
+
 - Node.js 24.x
 - npm (for `server/` and `web/`) and pnpm (for `crm/`)
 - A local or hosted PostgreSQL instance (for the CRM)
 
-### 1. Lead-Gen Engine
+</details>
+
+<details open>
+<summary><strong>1. Lead-Gen Engine</strong></summary>
 
 ```bash
 cd server && npm install
@@ -188,6 +278,7 @@ Copy `.env.example` → `.env` at the repo root and fill in:
 | `RESEND_API_KEY` | ✅ | Sending + delivery webhooks |
 | `EMAIL_FROM` | ✅ | From-address for outreach emails |
 | `CRM_API_URL` / `CRM_LOGIN_EMAIL` / `CRM_LOGIN_PASSWORD` | optional | Enables "Send to CRM"; omit to run without it |
+| `VITE_CRM_URL` | optional | Where the embedded Rapport tab points (`web/.env`); defaults to `http://localhost:5191` |
 
 ```bash
 # from server/
@@ -197,7 +288,10 @@ npm run dev        # API on :4000
 npm run dev         # UI on :5173, proxies /api -> :4000
 ```
 
-### 2. Rapport CRM
+</details>
+
+<details open>
+<summary><strong>2. Rapport CRM</strong></summary>
 
 ```bash
 cd crm
@@ -212,24 +306,17 @@ pnpm --filter @workspace/lead-crm run dev     # frontend
 
 Required env for the CRM: `DATABASE_URL` (Postgres connection string), `SESSION_SECRET`.
 
----
-
-## 🖼️ Design Reference
-
-The dashboard screenshot at the top and the ones below are UI design references used while building the Lead-Gen frontend — not live production data.
-
-<p align="center">
-  <img src="ui_reference/lead.png" alt="Lead detail view" width="48%">
-  <img src="ui_reference/settings.png" alt="Settings view" width="48%">
-</p>
+</details>
 
 ---
 
 ## 🌐 Live Deployments
 
-| App | URL | Hosting |
+| App | URL | What runs there |
 |---|---|---|
-| Lead-Gen Engine (frontend) | [lead-gen-demo-iota.vercel.app](https://lead-gen-demo-iota.vercel.app) | Vercel |
-| Rapport CRM (frontend) | [rapport-crm-demo.vercel.app](https://rapport-crm-demo.vercel.app) | Vercel |
+| Lead-Gen Engine | [lead-gen-demo-iota.vercel.app](https://lead-gen-demo-iota.vercel.app) | Frontend only, `VITE_DEMO_MODE` → in-memory mock data (`web/src/api/mockClient.ts`) |
+| Rapport CRM | [rapport-crm-demo.vercel.app](https://rapport-crm-demo.vercel.app) | Frontend only, `VITE_DEMO_MODE` → in-memory mock data (`crm/.../src/demo/installDemoFetch.ts`), auto-logged-in demo account |
 
-Both projects are connected to this repository for automatic deploys on push.
+Both projects are connected to this repository for automatic deploys on push. Neither demo deployment runs the real Express/Postgres backends — see [Getting Started](#-getting-started) to run those locally.
+
+<p align="center"><sub>Built with ❤️ and a lot of outreach follow-ups.</sub></p>
