@@ -31,6 +31,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePermissions } from "@/hooks/use-permission";
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, widgetKey: "nav_dashboard", permission: "dashboard.view" },
   { href: "/leads", label: "Leads", icon: Users, widgetKey: "nav_leads", permission: "leads.view" },
@@ -222,6 +224,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     : null;
 
   const visibleNav = NAV_ITEMS.filter(item => {
+    // Settings has no permission gate (always visible) — explicitly hidden from
+    // the curated demo tour since its backend isn't part of the mock.
+    if (DEMO_MODE && item.href === "/settings") return false;
+
     // Permission gate — superadmins bypass; null permission = always show (e.g. Settings)
     if (item.permission && !isSuperAdmin && !has(item.permission)) return false;
 
