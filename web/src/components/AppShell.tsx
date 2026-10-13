@@ -34,6 +34,8 @@ const NAV_ITEMS: { key: View; label: string; icon: typeof LayoutDashboard }[] = 
   { key: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+
 const COLLAPSE_STORAGE_KEY = "outreach.sidebarCollapsed";
 const WIDTH_STORAGE_KEY = "outreach.sidebarWidth";
 const COLLAPSED_WIDTH = 68;
@@ -157,7 +159,9 @@ export function AppShell({ children, view, onNavigate }: Props) {
           </Tooltip>
 
           <div className={cn("flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5", collapsed && "justify-center px-0 py-2")}>
-            {healthy === null ? (
+            {DEMO_MODE ? (
+              <span className="size-1.5 shrink-0 rounded-full bg-emerald-400" />
+            ) : healthy === null ? (
               <span className="size-1.5 shrink-0 rounded-full bg-white/30" />
             ) : healthy ? (
               <Wifi className="size-3.5 shrink-0 text-emerald-400" />
@@ -167,9 +171,9 @@ export function AppShell({ children, view, onNavigate }: Props) {
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <p className="text-[11.5px] font-medium text-white/85">
-                  {healthy === null ? "Checking…" : healthy ? "Backend connected" : "Backend unreachable"}
+                  {DEMO_MODE ? "Demo mode" : healthy === null ? "Checking…" : healthy ? "Backend connected" : "Backend unreachable"}
                 </p>
-                <p className="truncate text-[10.5px] text-white/35">localhost:4000</p>
+                <p className="truncate text-[10.5px] text-white/35">{DEMO_MODE ? "Sample data, nothing real is sent" : "localhost:4000"}</p>
               </div>
             )}
           </div>

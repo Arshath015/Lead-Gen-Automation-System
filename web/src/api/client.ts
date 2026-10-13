@@ -23,6 +23,7 @@ import type {
   SignatureImageUploadResult,
   UploadedFileDto,
 } from "../types";
+import { mockApi } from "./mockClient";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
@@ -37,7 +38,62 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export const api = {
+export interface ApiClient {
+  getConfig(): Promise<{ emailFrom: string }>;
+  listConnectors(): Promise<ConnectorStatus[]>;
+  listIcpProfiles(): Promise<IcpProfile[]>;
+  createIcpProfile(name: string, filters: IcpFilters): Promise<IcpProfile>;
+  updateIcpProfile(id: string, data: { name?: string; filters?: IcpFilters }): Promise<IcpProfile>;
+  deleteIcpProfile(id: string): Promise<void>;
+  runSearch(
+    icpProfileId: string,
+    page?: number,
+    perPage?: number
+  ): Promise<{ inserted: number; skippedDuplicates: number; fetched: number; totalAvailable: number; page: number; keywordDropped: boolean }>;
+  listLeads(params?: { status?: string; icpProfileId?: string; search?: string; limit?: number; offset?: number }): Promise<LeadsPageResponse>;
+  createLead(data: { fullName: string; title?: string; company?: string; email?: string; location?: string; linkedinUrl?: string }): Promise<Lead>;
+  updateLead(id: string, data: Partial<Lead>): Promise<Lead>;
+  deleteLead(id: string): Promise<void>;
+  bulkUpdateStatus(ids: string[], status: LeadStatus): Promise<{ updated: number }>;
+  revealLead(id: string): Promise<Lead>;
+  sendLeadToCrm(id: string): Promise<Lead>;
+  sendQualifiedToCrm(): Promise<{ totalQualified: number; alreadyInCrm: number; pushed: number; failed: number; failures: { id: string; fullName: string; error: string }[] }>;
+  revealBulk(ids: string[]): Promise<{ results: RevealResult[] }>;
+  getLeadActivity(leadId: string): Promise<LeadActivityEvent[]>;
+  listResearchBriefs(leadIds: string[]): Promise<ResearchBrief[]>;
+  getResearchBrief(leadId: string): Promise<ResearchBrief | null>;
+  generateResearchBrief(leadId: string, force?: boolean): Promise<ResearchBrief>;
+  generateResearchBulk(leadIds: string[], force?: boolean): Promise<{ results: { leadId: string; brief?: ResearchBrief; error?: string }[] }>;
+  updateResearchBrief(leadId: string, data: Partial<ResearchBrief>): Promise<ResearchBrief>;
+  listEmailDrafts(leadIds: string[]): Promise<EmailDraft[]>;
+  getEmailDraft(leadId: string): Promise<EmailDraft | null>;
+  getEmailDraftPreview(leadId: string): Promise<EmailPreview>;
+  generateEmailDraft(leadId: string, force?: boolean): Promise<EmailDraft>;
+  generateEmailDraftBulk(leadIds: string[], force?: boolean): Promise<{ results: { leadId: string; draft?: EmailDraft; error?: string }[] }>;
+  updateEmailDraft(leadId: string, data: Partial<EmailDraft>): Promise<EmailDraft>;
+  sendEmailDraft(leadId: string, force?: boolean): Promise<EmailDraft>;
+  sendEmailDraftBulk(leadIds: string[], force?: boolean): Promise<{ results: { leadId: string; draft?: EmailDraft; error?: string }[] }>;
+  getAutomationSettings(): Promise<EmailAutomationSettings>;
+  updateAutomationSettings(data: Partial<EmailAutomationSettings>): Promise<EmailAutomationSettings>;
+  getFollowUpHistory(leadId: string): Promise<{ tasks: FollowUpTask[]; messages: FollowUpMessage[]; dueStatus: FollowUpDueStatus | null }>;
+  sendFollowUpNow(leadId: string): Promise<{ tasks: FollowUpTask[]; messages: FollowUpMessage[] }>;
+  exportCsv(ids: string[]): Promise<Blob>;
+  listEngagementEvents(leadIds: string[]): Promise<EngagementEvent[]>;
+  getEngagementSummary(leadIds: string[]): Promise<EngagementSummary>;
+  uploadSignatureImage(file: File): Promise<SignatureImageUploadResult>;
+  deleteSignatureImage(id: string): Promise<void>;
+  listAttachments(): Promise<DefaultAttachment[]>;
+  uploadAttachment(file: File): Promise<DefaultAttachment>;
+  updateAttachment(id: string, data: { includeByDefault: boolean }): Promise<DefaultAttachment>;
+  deleteAttachment(id: string): Promise<void>;
+  uploadImportFiles(files: File[], stagingId?: string): Promise<{ stagingId: string; files: UploadedFileDto[] }>;
+  previewImport(stagingId: string, selections: ColumnMapping[]): Promise<{ digest: string; summary: ImportPreviewSummary }>;
+  commitImport(stagingId: string, digest: string): Promise<ImportCommitResult>;
+  cancelImport(stagingId: string): Promise<void>;
+  importErrorsCsvUrl(stagingId: string): string;
+}
+
+const realApi: ApiClient = {
   getConfig: () => request<{ emailFrom: string }>("/config"),
   listConnectors: () => request<ConnectorStatus[]>("/connectors"),
 
@@ -255,3 +311,8 @@ export const api = {
   cancelImport: (stagingId: string) => request<void>(`/import/${stagingId}`, { method: "DELETE" }),
   importErrorsCsvUrl: (stagingId: string) => `/api/import/${stagingId}/errors.csv`,
 };
+
+// VITE_DEMO_MODE is set only on the public Vercel demo deployment's project
+// env vars — never in local .env or any real deployment — so this branch
+// never affects local dev or a real production instance.
+export const api: ApiClient = import.meta.env.VITE_DEMO_MODE === "true" ? mockApi : realApi;
