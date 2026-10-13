@@ -1,0 +1,53 @@
+Done: Research → Review → AI Draft flow
+
+Built and verified (typecheck + build clean on both server and web; server confirmed to fail fast with a clear error if a required key is missing, rather than starting silently):
+
+Backend — new ResearchBrief/EmailDraft collections on the existing JSON store (with a new withCollectionLock mutex to make bulk/concurrent writes safe), Tavily search adapter, Anthropic (claude-sonnet-5) adapter using forced-tool-call structured output, and routes: /api/research and /api/email-drafts (single + bulk generate, get, patch, batched list-by-leadIds).
+
+Frontend — LeadsTable now shows Research/Draft status badges per lead and has "Research selected" / "Draft emails" bulk actions (same pattern as the existing "Reveal email" button); a new "Details" button opens LeadDetailPanel, where you can view/edit/regenerate the research brief and the AI-drafted email. No send button — drafts just save.
+
+What you need to do before this runs
+
+Add two keys to .env (see the new .env.example):
+- ANTHROPIC_API_KEY — your Claude API key
+- TAVILY_API_KEY — from tavily.com
+
+ANTHROPIC_MODEL defaults to claude-sonnet-5 if omitted. The server won't start without the first two — that's intentional, not a bug.
+
+Stop point — Resend
+
+I did not touch sending, follow-ups, reply detection, webhooks, or analytics. To pick that up later you'll need: a Resend account + verified sending domain, RESEND_API_KEY, a chosen from-address, a webhook pointing at this app (needs a public URL in dev, e.g. ngrok) with the resulting RESEND_WEBHOOK_SECRET, and confirmation of whether your Resend setup supports inbound subaddressing for reply detection (there's a header-matching fallback if not). Full design for that stage is already written in the plan file from this session if you want to resume from there.
+
+Done: Send Personalized Email (using saved AI drafts)
+
+Backend — env.ts now reads RESEND_API_KEY and EMAIL_FROM (fails fast if missing, same as the other keys). New server/src/email/{IEmailAdapter,resendAdapter}.ts (plain-text send via the official `resend` SDK, module-level client, same error-throwing convention as the Tavily/Apollo adapters). EmailDraft gained sendStatus ("not_sent" | "sent" | "failed"), sentAt, resendMessageId, sendError fields (both server and web types). New routes on the existing /api/email-drafts router: POST /:leadId/send and POST /send-bulk — validates the lead has a revealed email and a saved draft, sends via Resend, persists the result (or the error) on the draft. Sending again after a successful send requires { force: true } to avoid accidental duplicate sends; failed sends can always be retried without force.
+
+Frontend — LeadDetailPanel's email-draft section now has a Send/Resend button (disabled until the lead's email is revealed) showing sent time or the last send error. LeadsTable has a bulk "Send emails" action and a new "Sent" status column, following the same pattern as Research/Draft.
+
+Verified: server + web both typecheck and build clean. Sent one real isolated test email through the Resend API directly (bypassing the app, since ANTHROPIC_API_KEY/TAVILY_API_KEY are still missing from .env and the server won't boot without them — see below) — delivered successfully. Have not yet exercised the send routes through the actual running server/UI; do that once the two missing keys are added.
+
+Still missing from .env at the time: ANTHROPIC_API_KEY, TAVILY_API_KEY. TAVILY_API_KEY has since been added. ANTHROPIC_API_KEY was replaced entirely — see below.
+
+Done: swapped Anthropic for Groq (open-source model, no Anthropic dependency for MVP)
+
+The LLM provider was already behind server/src/llm/ILlmAdapter.ts, so this was a straight swap: deleted anthropicAdapter.ts and the @anthropic-ai/sdk dependency, added server/src/llm/groqAdapter.ts using the official `groq-sdk` client against Groq's OpenAI-compatible chat.completions API (forced tool_choice: {type:"function", function:{name}} for structured output, max_completion_tokens — same forced-tool-call pattern as before, just OpenAI-shaped instead of Anthropic-shaped). research.routes.ts and emailDrafts.routes.ts now import groqAdapter instead of anthropicAdapter — no other route/frontend changes needed since the interface didn't change shape.
+
+env.ts now requires GROQ_API_KEY instead of ANTHROPIC_API_KEY, and GROQ_MODEL defaults to "openai/gpt-oss-20b" (an open-weight model served on Groq's infra — fast, large 131k context window, and confirmed to support tool/function calling). Confirmed via a real server startup attempt that the missing-env error now names GROQ_API_KEY, not ANTHROPIC_API_KEY — Anthropic is fully decoupled. Have not yet run an actual Groq API call end-to-end (needs GROQ_API_KEY from console.groq.com); do that once the key is added. Tavily remains the research/search provider, untouched.
+
+Fixed: gpt-oss-20b forced-tool-call JSON bug, found during live end-to-end verification
+
+Once GROQ_API_KEY was added, live-testing the research-brief generation (nested schema: array of news-item objects, array of source objects) reliably failed with a Groq-side 400 `tool_use_failed` ("Failed to parse tool call arguments as JSON") — gpt-oss-20b was generating well-formed JSON content but failing to correctly string-encode it into the forced tool-call `arguments` field for schemas with nested objects. A single retry did not help (failed identically both times), and it was independently reproduced via a raw fetch script against the Groq API directly (bypassing our code), confirming it's a Groq/model-side quirk, not our schema-consumption bug.
+
+Fix: groqAdapter.ts no longer uses tools/tool_choice at all. It now uses `response_format: {type: "json_schema", json_schema: {name, schema, strict: true}}`, which has the model emit the JSON directly as message content instead of nesting it inside a stringified tool-call argument — sidesteps the encoding bug entirely. Verified with the same nested research-brief schema via an isolated script (200 OK, clean JSON) and then through the real running server. Also added temperature: 0.2 (more deterministic structured output) and kept a defensive one-retry wrapper for the rarer case of the model returning non-JSON content despite strict mode. All object schemas now set additionalProperties: false and list every property (including nullable ones) in required, since Groq's strict json_schema mode requires that subset of JSON Schema.
+
+Verified live end-to-end (real running server + real Apollo/Tavily/Groq calls, via direct API calls since the Chrome browser extension wasn't connected for a UI walkthrough): Search (Apollo, 1 lead: Paul Watson @ Sedona Technologies) → Research generate (Tavily + Groq, real search results, well-formed brief) → Review/Edit (PATCH, edits persisted, editedByUser flips true) → Reveal Email (Apollo, real address revealed) → AI Draft generate (Groq, correctly incorporated the user's edited pain points) → Edit/Review draft (PATCH, edits persisted). Also confirmed the exact list/get endpoints the frontend reads on load (GET /api/leads, /api/research?leadIds=, /api/email-drafts?leadIds=, and the single-resource GETs) all return data shaped correctly for the UI. Did not exercise the actual POST /send call — stopped there per instruction not to send real email without asking first.
+
+Left in server/data as test artifacts: one ICP profile ("QA Test Profile") and one real lead (Paul Watson, Sedona Technologies) with QA-edited research brief and draft. Not cleaned up in case you want to inspect them or use them to test Send; safe to delete via the UI (or by clearing server/data/*.json) whenever.
+
+Done: Send step verified live, without emailing the real lead
+
+With your go-ahead, tested POST /email-drafts/:leadId/send through the real route: temporarily PATCHed the test lead's revealed email to arshathpvt@gmail.com, called send (succeeded — sendStatus: "sent", real resendMessageId), then restored the lead's real revealed address (pwakeman@sedonatek.com) and reset the draft's sendStatus/sentAt/resendMessageId back to not_sent/null, since that "sent" event was to a test address, not the real lead — so the draft's send state now accurately reflects that nothing has actually gone to Paul Watson. All 7 flow stages (Search → Research → Review/Edit → Reveal Email → AI Draft → Edit/Review → Send) are now confirmed working against the real running server with real Apollo/Tavily/Groq/Resend calls. No known issues remain.
+
+Stop point — follow-ups, reply detection, webhooks, analytics
+
+Not touched. To pick this up you'll need: a webhook endpoint in this app reachable from the internet (a public URL in dev, e.g. ngrok) registered in the Resend dashboard, the resulting RESEND_WEBHOOK_SECRET for verifying webhook signatures, and confirmation of whether your Resend/domain setup supports inbound parsing or subaddressing for reply detection (otherwise a header-matching fallback against sent Message-IDs is needed). Follow-up scheduling and analytics (open/click/reply rates) both build on top of that webhook data.

@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: -apple-system, "Segoe UI", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #f4f4f7;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #fafafc;
+  --color-ink: #0f0f13;
+  --color-border-subtle: #ececef;
+  --color-border: #dfdfe4;
+  --color-border-strong: #c9c9d1;
+
+  --color-accent-50: #f0f1ff;
+  --color-accent-100: #e0e2fe;
+  --color-accent-200: #c7cafd;
+  --color-accent-500: #6059f7;
+  --color-accent-600: #4f46e5;
+  --color-accent-700: #4038c7;
+  --color-accent-900: #1c1a4d;
+
+  /* Sidebar is a deep navy-indigo, not a tint of the canvas — the point is
+     contrast against the light workspace, not a lighter/darker version of
+     the same surface. */
+  --color-ink-900: #100f26;
+  --color-ink-800: #17162f;
+  --color-ink-700: #201f3d;
+  --color-ink-600: #2a2850;
+
+  /* Restrained, mostly-flat elevation: brutalist-influenced borders do the
+     heavy lifting for hierarchy, shadows only add just enough lift to read
+     as "floating" for popovers/sheets and a faint pressed depth for cards. */
+  --shadow-sheet: -12px 0 40px -12px rgb(0 0 0 / 0.16);
+  --shadow-popover: 0 8px 24px -6px rgb(0 0 0 / 0.14), 0 2px 8px -2px rgb(0 0 0 / 0.08);
+  --shadow-card: 0 1px 2px rgb(15 15 19 / 0.03), 0 1px 0 rgb(15 15 19 / 0.02);
+  --shadow-inset: inset 0 1px 2px rgb(15 15 19 / 0.04);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: #16161a;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Shared scroll container for anything that must never let content escape
+   its bounds uncontrollably (popovers, dropdowns, modal bodies): caps height
+   to whatever room Radix/the viewport actually has and scrolls internally
+   instead of clipping or overflowing off-screen. */
+.scroll-contain {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #d4d4d8;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tailwind's preflight strips default list/quote/heading styling, which the
+   signature editor's canvas needs back — this is the same HTML that gets
+   sanitized and sent in real emails, so it should look the way it will read. */
+.signature-editor-content {
+  line-height: 1.6;
+}
+.signature-editor-content p {
+  margin: 0 0 0.5em;
+}
+.signature-editor-content h1 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin: 0.4em 0;
+}
+.signature-editor-content h2 {
+  font-size: 1.15em;
+  font-weight: 700;
+  margin: 0.4em 0;
+}
+.signature-editor-content h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 0.4em 0;
+}
+.signature-editor-content ul {
+  list-style: disc;
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+.signature-editor-content ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+.signature-editor-content blockquote {
+  border-left: 3px solid var(--color-border-strong);
+  padding-left: 0.75em;
+  color: #6b7280;
+  margin: 0.5em 0;
+}
+.signature-editor-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0.75em 0;
+}
+.signature-editor-content a {
+  color: var(--color-accent-600);
+  text-decoration: underline;
+}
+.signature-editor-content img {
+  /* No width/height override here on purpose: the resize handles below
+     persist explicit width/height HTML attributes on the <img> (see
+     SignatureEditor.tsx), and those must be the ones that actually size the
+     image — both live in the editor and in the static, non-editor renders
+     of the same HTML (EmailComposer's signature preview, Settings' saved
+     signature display) that don't have a Tiptap node view to fall back on. */
+  max-width: 100%;
+  max-height: 500px; /* generous safety net against a runaway paste/attribute value, not a normal-use limit */
+  border-radius: 6px;
+  display: block;
+  margin: 0.4em 0;
+}
+
+/* Resizable signature image (Tiptap's built-in ResizableNodeView, wired up
+   in SignatureEditor.tsx). The extension doesn't forward a className option
+   through to the resize view, so handles are styled here via the
+   data-resize-* attributes it always sets, scoped under
+   .signature-editor-content so nothing leaks into the rest of the app. */
+.signature-editor-content [data-resize-wrapper] {
+  /* Overrides the node view's own inline `display: block`, which would
+     otherwise stretch to the full editor width regardless of the image's
+     actual (possibly resized-down) size — misaligning the corner/edge
+     handles from the visible image edges. */
+  display: inline-block !important;
+  line-height: 0;
+}
+.signature-editor-content [data-resize-handle] {
+  display: none;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent-600);
+  border: 2px solid #fff;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  z-index: 10;
+}
+/* Shown only once the image is selected (ProseMirror adds this class to the
+   node view's root element for the currently selected node) — matches
+   "show handles when an image is selected", not on every hover/always-on. */
+.signature-editor-content [data-resize-container].ProseMirror-selectednode [data-resize-handle] {
+  display: block;
+}
+.signature-editor-content [data-resize-handle="top-left"] {
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+.signature-editor-content [data-resize-handle="bottom-right"] {
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+.signature-editor-content [data-resize-handle="top-right"] {
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+.signature-editor-content [data-resize-handle="bottom-left"] {
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+/* Edge handles: the node view sets left+right (or top+bottom) both to 0
+   inline for these, which stretches them full-width/height with no
+   explicit size — override to a small centered square like the corners. */
+.signature-editor-content [data-resize-handle="top"],
+.signature-editor-content [data-resize-handle="bottom"] {
+  left: 50% !important;
+  right: auto !important;
+  width: 10px;
+  cursor: ns-resize;
+}
+.signature-editor-content [data-resize-handle="top"] {
+  transform: translate(-50%, -50%);
+}
+.signature-editor-content [data-resize-handle="bottom"] {
+  transform: translate(-50%, 50%);
+}
+.signature-editor-content [data-resize-handle="left"],
+.signature-editor-content [data-resize-handle="right"] {
+  top: 50% !important;
+  bottom: auto !important;
+  height: 10px;
+  cursor: ew-resize;
+}
+.signature-editor-content [data-resize-handle="left"] {
+  transform: translate(-50%, -50%);
+}
+.signature-editor-content [data-resize-handle="right"] {
+  transform: translate(50%, -50%);
+}
+/* Subtle live feedback while actively dragging (data-resize-state is always
+   set by the node view regardless of the className option). */
+.signature-editor-content [data-resize-container][data-resize-state="true"] img {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 1px;
+}
+.signature-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  float: left;
+  height: 0;
+  pointer-events: none;
+  white-space: pre-line;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheet-in {
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { transform: translateY(4px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes toast-in {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes bar-in {
+  from { transform: translate(-50%, 12px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.animate-overlay-in { animation: overlay-in 150ms ease-out; }
+.animate-sheet-in { animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-modal-in { animation: modal-in 160ms cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-toast-in { animation: toast-in 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-bar-in { animation: bar-in 180ms cubic-bezier(0.16, 1, 0.3, 1); }

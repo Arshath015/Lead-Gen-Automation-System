@@ -1,0 +1,304 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* PITCS brand CTA yellow */
+  --color-cta: hsl(var(--cta));
+  --color-cta-foreground: hsl(var(--cta-foreground));
+  --color-cta-border: var(--cta-border);
+  --color-cta-ring: var(--cta-ring);
+
+  /* Brand blue light tint */
+  --color-brand-light: hsl(var(--brand-light));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Inter", sans-serif;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 210 88% 37%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
+
+  /* PITCS brand blue #0B5FB0 */
+  --primary: 210 88% 37%;
+  --primary-foreground: 0 0% 100%;
+  --primary-border: hsl(210 88% 29%);
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --secondary-border: 214 32% 91%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted-border: 214 32% 91%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent-border: 214 32% 91%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-border: hsl(0 84.2% 50%);
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-primary: 210 88% 37%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 60% 95%;
+  --sidebar-accent-foreground: 210 88% 37%;
+  --sidebar-ring: 210 88% 37%;
+
+  /* Brand blue light tint #E8F1FB */
+  --brand-light: 210 67% 95%;
+
+  /* CTA yellow #FFE07A */
+  --cta: 46 100% 74%;
+  --cta-foreground: 220 13% 17%;
+  --cta-border: hsl(45 100% 65%);
+  --cta-ring: #B8860B;
+
+  --radius: 0.5rem;
+  
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  /* Neumorphic shadow tokens — light mode */
+  --neuo-shadow: 8px 8px 16px rgba(163,177,198,0.15), -8px -8px 16px rgba(255,255,255,0.7);
+  --neuo-pressed: 4px 4px 8px rgba(163,177,198,0.12), -4px -4px 8px rgba(255,255,255,0.6);
+  --neuo-sm: 4px 4px 12px rgba(163,177,198,0.12), -4px -4px 10px rgba(255,255,255,0.65);
+}
+
+.dark {
+  /* Deep charcoal background — #12141A ≈ HSL(225,18%,9%) */
+  --background: 225 18% 9%;
+  --foreground: 215 35% 92%;
+  --border: 222 12% 20%;
+  --input: 222 12% 18%;
+  --ring: 215 40% 60%;
+
+  /* Charcoal card — #1C1F26 ≈ HSL(222,15%,13%) */
+  --card: 222 15% 13%;
+  --card-foreground: 215 35% 92%;
+  --card-border: 222 12% 20%;
+
+  --popover: 222 15% 13%;
+  --popover-foreground: 215 35% 92%;
+  --popover-border: 222 12% 20%;
+
+  --primary: 215 42% 58%;
+  --primary-foreground: 0 0% 100%;
+  --primary-border: hsl(215 42% 48%);
+
+  --secondary: 222 14% 18%;
+  --secondary-foreground: 215 35% 92%;
+  --secondary-border: 222 12% 24%;
+
+  --muted: 222 14% 18%;
+  --muted-foreground: 215 12% 52%;
+  --muted-border: 222 12% 24%;
+
+  --accent: 222 14% 18%;
+  --accent-foreground: 215 35% 92%;
+  --accent-border: 222 12% 24%;
+
+  --destructive: 0 55% 45%;
+  --destructive-foreground: 210 40% 98%;
+  --destructive-border: hsl(0 55% 35%);
+
+  /* Sidebar slightly lighter than bg, slightly darker than card */
+  --sidebar: 225 16% 11%;
+  --sidebar-foreground: 215 35% 92%;
+  --sidebar-border: 222 12% 20%;
+  --sidebar-primary: 215 42% 58%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 14% 18%;
+  --sidebar-accent-foreground: 215 30% 80%;
+  --sidebar-ring: 215 42% 58%;
+
+  --brand-light: 215 28% 22%;
+
+  --cta: 46 100% 74%;
+  --cta-foreground: 220 13% 17%;
+  --cta-border: hsl(45 100% 55%);
+  --cta-ring: #B8860B;
+
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+
+  /* Neumorphic shadow tokens — dark mode (charcoal raise) */
+  --neuo-shadow: 6px 6px 14px rgba(0,0,0,0.5), -4px -4px 10px rgba(255,255,255,0.025);
+  --neuo-pressed: 3px 3px 6px rgba(0,0,0,0.45), -2px -2px 5px rgba(255,255,255,0.02);
+  --neuo-sm: 4px 4px 10px rgba(0,0,0,0.45), -3px -3px 8px rgba(255,255,255,0.02);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .shadow-neuo {
+    box-shadow: var(--neuo-shadow);
+  }
+  .shadow-neuo-pressed {
+    box-shadow: var(--neuo-pressed);
+  }
+  .shadow-neuo-sm {
+    box-shadow: var(--neuo-sm);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: var(--neuo-shadow),
+      0 0 18px rgba(227, 83, 54, 0.28),
+      0 0 36px rgba(244, 164, 96, 0.14);
+  }
+  50% {
+    box-shadow: var(--neuo-shadow),
+      0 0 30px rgba(227, 83, 54, 0.45),
+      0 0 60px rgba(244, 164, 96, 0.24);
+  }
+}
+
+.stat-card-glow {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.dark .stat-card-glow {
+  animation: glowPulseDark 3s ease-in-out infinite;
+}
+
+@keyframes glowPulseDark {
+  0%, 100% {
+    box-shadow: var(--neuo-shadow),
+      0 0 20px rgba(240, 101, 72, 0.35),
+      0 0 40px rgba(245, 181, 112, 0.18);
+  }
+  50% {
+    box-shadow: var(--neuo-shadow),
+      0 0 36px rgba(240, 101, 72, 0.55),
+      0 0 72px rgba(245, 181, 112, 0.30);
+  }
+}
+
+/* ─── Report Print Layout ─────────────────────────────────────────────────── */
+/* Rendered off-screen at fixed 794px so Recharts has a defined width to size against */
+#crm-report-print {
+  position: fixed;
+  left: -100vw;
+  top: 0;
+  width: 794px;
+  background: white;
+  pointer-events: none;
+  z-index: -1;
+  overflow: visible;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide all app UI */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show only the report print layout */
+  #crm-report-print,
+  #crm-report-print * {
+    visibility: visible !important;
+  }
+
+  #crm-report-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    z-index: 9999 !important;
+    overflow: visible !important;
+  }
+}

@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --color-navy: #0B1121;
+  --color-electric: #3B82F6;
+  --color-amber: #F59E0B;
+}
+
+:root {
+  --background: 222 50% 9%;
+  --foreground: 210 40% 98%;
+}
+
+body {
+  background-color: var(--color-navy);
+  color: #ffffff;
+  font-family: var(--font-sans);
+}

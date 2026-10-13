@@ -1,0 +1,73 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import authRouter from "./auth";
+import usersRouter from "./users";
+import stagesRouter from "./stages";
+import leadsRouter from "./leads";
+import followupsRouter from "./followups";
+import notesRouter from "./notes";
+import activitiesRouter from "./activities";
+import dashboardRouter from "./dashboard";
+import reportsRouter from "./reports";
+import auditRouter from "./audit";
+import tagsRouter from "./tags";
+import tasksRouter from "./tasks";
+import notificationsRouter from "./notifications";
+import attachmentsRouter from "./attachments";
+import teamsRouter from "./teams";
+import rolesRouter from "./roles";
+import scheduledActivitiesRouter from "./scheduled-activities";
+import accountsRouter from "./accounts";
+import contactsRouter from "./contacts";
+import dealsRouter from "./deals";
+import automationRouter from "./automation";
+import orgSettingsRouter from "./org-settings";
+import publicRouter from "./public";
+import emailsRouter from "./emails";
+import emailTemplatesRouter from "./email-templates";
+import approvalsRouter from "./approvals";
+import workspacesRouter from "./workspaces";
+import permissionsRouter from "./permissions";
+import importsRouter from "./imports";
+import notificationPreferencesRouter from "./notification-preferences";
+import dealRevenueEntriesRouter from "./deal-revenue-entries";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(authRouter);
+router.use(usersRouter);
+router.use(stagesRouter);
+router.use(leadsRouter);
+router.use(followupsRouter);
+router.use(notesRouter);
+router.use(activitiesRouter);
+router.use(dashboardRouter);
+router.use(reportsRouter);
+router.use(auditRouter);
+router.use(tagsRouter);
+router.use(tasksRouter);
+router.use(notificationsRouter);
+router.use(attachmentsRouter);
+// seedRouter (POST /admin/seed-demo, fake sample leads) intentionally not
+// mounted — this is meant to be a real, professional instance, not a demo
+// sandbox. See routes/seed.ts if you ever want it back.
+router.use(teamsRouter);
+router.use(rolesRouter);
+router.use(scheduledActivitiesRouter);
+router.use(accountsRouter);
+router.use(contactsRouter);
+router.use(dealsRouter);
+router.use(automationRouter);
+router.use(orgSettingsRouter);
+router.use(publicRouter);
+router.use(emailsRouter);
+router.use(emailTemplatesRouter);
+router.use(approvalsRouter);
+router.use(workspacesRouter);
+router.use(permissionsRouter);
+router.use(importsRouter);
+router.use(notificationPreferencesRouter);
+router.use(dealRevenueEntriesRouter);
+
+export default router;

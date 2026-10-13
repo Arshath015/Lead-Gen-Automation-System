@@ -1,0 +1,26 @@
+node_modules/
+.env
+.env.*
+!.env.example
+server/data/*.json
+server/data/signature-assets/
+server/data/attachments/
+server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
+dist/
+build/
+.DS_Store
+*.log
+*.tsbuildinfo
+.vercel
+.localpg/
+*.pid
+
+# Real/large contact data — not sample data, keep local only
+import_database_template/Master Contact Database.xlsx
+
+# Local backups / handoff docs (kept out of the repo on purpose)
+*.zip
+PROJECT_HANDOFF.pdf
+CRM_INTEGRATION_OVERVIEW.pdf

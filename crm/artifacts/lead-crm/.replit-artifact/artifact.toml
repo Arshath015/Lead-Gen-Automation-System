@@ -1,0 +1,30 @@
+kind = "web"
+previewPath = "/"
+title = "Lead CRM"
+version = "1.0.0"
+id = "artifacts/lead-crm"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 5000
+
+[services.development]
+run = "pnpm --filter @workspace/lead-crm run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lead-crm", "run", "build" ]
+publicDir = "artifacts/lead-crm/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "5000"
+BASE_PATH = "/"
